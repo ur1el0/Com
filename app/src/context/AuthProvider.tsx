@@ -1,40 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
+import React, { useState, useEffect, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase.js';
 import { AuthContext, type AuthContextType, type LoginCredentials, type RegisterCredentials } from './AuthContext.js';
+import type { Session, User } from '@supabase/supabase-js';
 
 interface AuthProviderProps {
-    children: React.ReactNode;
+    children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
     const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-            setSession(currentSession);
+        // 1. Fetch initial session on mount
+        async function getInitialSession() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                setSession(session);
+                setUser(session?.user ?? null);
+            } catch (error) {
+                console.error('Error fetching initial session:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        getInitialSession();
+
+        // 2. Listen to authentication state changes (login, logout, token refresh, etc.)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
             setIsLoading(false);
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, currentSession: Session | null) => {
-            setSession(currentSession);
-            setIsLoading(false);
-        });
-
-        return () => subscription.unsubscribe();
+        // 3. Clean up the listener when the component unmounts
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
-    const handleLogin = async (credentials: LoginCredentials) => {
+    async function login(credentials: LoginCredentials) {
         const { data, error } = await supabase.auth.signInWithPassword({
             email: credentials.email,
             password: credentials.password,
         });
         if (error) throw error;
         return data;
-    };
+    }
 
-    const handleRegister = async (credentials: RegisterCredentials) => {
+    async function register(credentials: RegisterCredentials) {
+        if (credentials.password !== credentials.passwordConfirm) {
+            throw new Error("Passwords do not match");
+        }
         const { data, error } = await supabase.auth.signUp({
             email: credentials.email,
             password: credentials.password,
@@ -46,29 +65,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
         if (error) throw error;
         return data;
-    };
+    }
 
-    const handleSignOut = async () => {
+    async function logout() {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
-    };
+    }
 
-    const user = session?.user ?? null;
-    const isAuthenticated = !!session;
-
-    const contextValue: AuthContextType = {
+    const value: AuthContextType = {
         session,
-        isLoading,
         user,
-        isAuthenticated,
-        login: handleLogin,
-        register: handleRegister,
-        signOut: handleSignOut,
+        isLoading,
+        isAuthenticated: !!user,
+        login,
+        register,
+        logout,
     };
 
     return (
-        <AuthContext.Provider value={contextValue}>
-            {!isLoading && children}
+        <AuthContext.Provider value={value}>
+            {children}
         </AuthContext.Provider>
     );
-};
+}
