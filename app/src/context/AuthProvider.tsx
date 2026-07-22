@@ -42,19 +42,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     async function login(credentials: LoginCredentials) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
             email: credentials.email,
             password: credentials.password,
         });
         if (error) throw error;
-        return data;
     }
 
     async function register(credentials: RegisterCredentials) {
         if (credentials.password !== credentials.passwordConfirm) {
             throw new Error("Passwords do not match");
         }
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
             email: credentials.email,
             password: credentials.password,
             options: {
@@ -64,7 +63,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             },
         });
         if (error) throw error;
-        return data;
     }
 
     async function logout() {

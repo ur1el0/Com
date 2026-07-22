@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, User, AuthResponse } from '@supabase/supabase-js';
 
 export interface LoginCredentials {
     email: string;
@@ -19,8 +19,8 @@ export interface AuthContextType {
     isLoading: boolean;
     user: User | null;
     isAuthenticated: boolean;
-    login: (credentials: LoginCredentials) => Promise<any>;
-    register: (credentials: RegisterCredentials) => Promise<any>;
+    login: (credentials: LoginCredentials) => Promise<void>;
+    register: (credentials: RegisterCredentials) => Promise<void>;
     logout: () => Promise<void>;
 }
 
