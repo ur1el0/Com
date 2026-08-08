@@ -1,6 +1,5 @@
 import { createContext } from 'react';
-
-import type { Session, User, AuthResponse } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 
 export interface LoginCredentials {
     email: string;

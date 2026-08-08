@@ -14,7 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      subjects: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          name: string
+          code: string | null
+          color: string | null
+          grade: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id: string
+          name: string
+          code?: string | null
+          color?: string | null
+          grade?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          name?: string
+          code?: string | null
+          color?: string | null
+          grade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
