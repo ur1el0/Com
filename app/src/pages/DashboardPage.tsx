@@ -5,7 +5,10 @@ import { useSubjects } from '../hooks/useSubjects.js'
 export function DashboardPage() {
     const { user, logout } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-    const { subjects, isLoading, error } = useSubjects();
+    const { subjects, isLoading, error, addSubject, deleteSubject } = useSubjects();
+    const [newSubjectName, setNewSubjectName] = useState<string>('');
+    const [isAdding, setIsAdding] = useState<boolean>(false);
+
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -15,6 +18,30 @@ export function DashboardPage() {
             console.error('Logout failed:', error);
         } finally {
             setIsLoggingOut(false);
+        }
+    };
+
+    const handleAddSubject = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (!newSubjectName.trim()) return;
+
+        setIsAdding(true)
+        try {
+            await addSubject(newSubjectName)
+            setNewSubjectName('')
+        } catch (err){
+            console.error('Failed to add subject:', err)
+        } finally {
+            setIsAdding(false)
+        }
+    }
+
+    const handleDeleteSubject = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this subject?')) return;
+        try {
+            await deleteSubject(id);
+        } catch (err) {
+            console.error('Failed to delete subject:', err);
         }
     };
 
@@ -36,6 +63,24 @@ export function DashboardPage() {
                 </button>
                 <div className="w-full flex flex-col items-stretch text-left gap-3 my-2">
                     <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Your Subjects</h2>
+                    <form onSubmit={handleAddSubject} className="w-full flex gap-2">
+                        <input
+                            type="text"
+                            value={newSubjectName}
+                            onChange={(e) => setNewSubjectName(e.target.value)}
+                            placeholder="Add new subject..."
+                            className="flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                            disabled={isAdding}
+                            required
+                        />
+                        <button
+                            type="submit"
+                            disabled={isAdding}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-1.5 rounded transition-colors disabled:opacity-50 text-sm cursor-pointer"
+                        >
+                            {isAdding ? 'Adding...' : 'Add'}
+                        </button>
+                    </form>
 
                     {isLoading ? (
                         <p className="text-slate-500 text-sm italic text-center">Loading...</p>
@@ -48,12 +93,21 @@ export function DashboardPage() {
                             {subjects.map((subject) => (
                                 <li key={subject.id} className="bg-slate-950 border border-slate-800/80 rounded px-3 py-2 text-sm flex justify-between items-center">
                                     <span className="font-medium text-slate-200">{subject.name}</span>
-                                    {subject.grade && (
-                                        <span className="text-xs bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded text-indigo-400 font-semibold">
-                                            {subject.grade}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center gap-3">
+                                        {subject.grade && (
+                                            <span className="text-xs bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded text-indigo-400 font-semibold">
+                                                {subject.grade}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => handleDeleteSubject(subject.id)}
+                                            className="text-xs text-rose-450 hover:text-rose-400 font-medium px-2 py-1 rounded transition-colors cursor-pointer"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </li>
+
                             ))}
                         </ul>
                     )}
