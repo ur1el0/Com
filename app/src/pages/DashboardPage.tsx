@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { useSubjects } from '../hooks/useSubjects.js'
+import { useAssignments } from '../hooks/useAssignments.js';
 
 export function DashboardPage() {
     const { user, logout } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
     const { subjects, isLoading, error, addSubject, deleteSubject } = useSubjects();
+    const { assignments, isLoading: isAssignmentsLoading, error: assignmentsError } = useAssignments()
     const [newSubjectName, setNewSubjectName] = useState<string>('');
     const [isAdding, setIsAdding] = useState<boolean>(false);
 
@@ -111,6 +113,38 @@ export function DashboardPage() {
                             ))}
                         </ul>
                     )}
+                <div className="w-full flex flex-col items-stretch text-left gap-3 mt-4 border-t border-slate-800/60 pt-4">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Your Assignments</h2>
+                    {isAssignmentsLoading ? (
+                        <p className="text-slate-500 text-sm italic text-center">Loading...</p>
+                    ) : assignmentsError ? (
+                        <p className="text-red-400 text-sm bg-red-950/20 border border-red-900/30 px-3 py-2 rounded text-center">{assignmentsError}</p>
+                    ) : assignments.length === 0 ? (
+                        <p className="text-slate-500 text-sm italic text-center">No assignments yet.</p>
+                    ) : (
+                        <ul className="flex flex-col gap-2">
+                            {assignments.map((assignment) => {
+                                // 💡 Relational matching logic: find the subject name matching this subject_id
+                                const subject = subjects.find(s => s.id === assignment.subject_id);
+                                return (
+                                    <li key={assignment.id} className="bg-slate-950 border border-slate-800/80 rounded px-3 py-2 text-sm flex justify-between items-center">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="font-medium text-slate-200">{assignment.title}</span>
+                                            {subject && (
+                                                <span className="text-xs text-indigo-400 font-semibold">{subject.name}</span>
+                                            )}
+                                        </div>
+                                        {assignment.due_date && (
+                                            <span className="text-xs text-slate-500">
+                                                {new Date(assignment.due_date).toLocaleDateString()}
+                                            </span>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </div>
                 </div>
             </div>
         </main>
