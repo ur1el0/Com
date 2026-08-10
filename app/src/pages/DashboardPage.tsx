@@ -2,15 +2,22 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { useSubjects } from '../hooks/useSubjects.js'
 import { useAssignments } from '../hooks/useAssignments.js';
+import { useNotes } from '../hooks/useNotes.js';
 
 export function DashboardPage() {
     const { user, logout } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
     const { subjects, isLoading, error, addSubject, deleteSubject } = useSubjects();
     const { assignments, isLoading: isAssignmentsLoading, error: assignmentsError, addAssignment, updateAssignment, deleteAssignment } = useAssignments();
+    const { notes, isLoading: isNotesLoading, error: notesError, addNote, deleteNote } = useNotes()
     const [newAssignmentTitle, setNewAssignmentTitle] = useState<string>('');
     const [newAssignmentSubjectId, setNewAssignmentSubjectId] = useState<string>('');
     const [newAssignmentDueDate, setNewAssignmentDueDate] = useState<string>('');
+    const [newNoteTitle, setNewNoteTitle] = useState<string>('');
+    const [newNoteContent, setNewNoteContent] = useState<string>('');
+    const [newNoteSubjectId, setNewNoteSubjectId] = useState<string>('');
+    const [isAddingNote, setIsAddingNote] = useState<boolean>(false);
+
     const [isAddingAssignment, setIsAddingAssignment] = useState<boolean>(false);
 
     const [newSubjectName, setNewSubjectName] = useState<string>('');
@@ -87,6 +94,33 @@ export function DashboardPage() {
             await deleteAssignment(id);
         } catch (err) {
             console.error('Failed to delete assignment:', err);
+        }
+    };
+
+        const handleAddNote = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!newNoteTitle.trim()) return;
+
+        setIsAddingNote(true);
+        try {
+            const subjectIdVal = newNoteSubjectId || null;
+            await addNote(newNoteTitle, newNoteContent, subjectIdVal);
+            setNewNoteTitle('');
+            setNewNoteContent('');
+            setNewNoteSubjectId('');
+        } catch (err) {
+            console.error('Failed to add note:', err);
+        } finally {
+            setIsAddingNote(false);
+        }
+    };
+
+    const handleDeleteNote = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this note?')) return;
+        try {
+            await deleteNote(id);
+        } catch (err) {
+            console.error('Failed to delete note:', err);
         }
     };
 
@@ -201,7 +235,6 @@ export function DashboardPage() {
 
                         <ul className="flex flex-col gap-2">
                             {assignments.map((assignment) => {
-                                // Relational matching logic: find the subject name matching this subject_id
                                 const subject = subjects.find(s => s.id === assignment.subject_id);
                                 const isCompleted = assignment.status === 'completed';
                                 return (
@@ -249,7 +282,6 @@ export function DashboardPage() {
                     ) : (
                         <ul className="flex flex-col gap-2">
                             {assignments.map((assignment) => {
-                                // 💡 Relational matching logic: find the subject name matching this subject_id
                                 const subject = subjects.find(s => s.id === assignment.subject_id);
                                 return (
                                     <li key={assignment.id} className="bg-slate-950 border border-slate-800/80 rounded px-3 py-2 text-sm flex justify-between items-center">
@@ -270,6 +302,89 @@ export function DashboardPage() {
                         </ul>
                     )}
                 </div>
+                                
+                <div className="w-full flex flex-col items-stretch text-left gap-3 mt-4 border-t border-slate-800/60 pt-4">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Your Notes</h2>
+<form onSubmit={handleAddNote} className="w-full flex flex-col gap-2 bg-slate-950/40 border border-slate-800/80 rounded p-3">
+                        <input
+                            type="text"
+                            value={newNoteTitle}
+                            onChange={(e) => setNewNoteTitle(e.target.value)}
+                            placeholder="Note title..."
+                            className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                            disabled={isAddingNote}
+                            required
+                        />
+                        <textarea
+                            value={newNoteContent}
+                            onChange={(e) => setNewNoteContent(e.target.value)}
+                            placeholder="Note content..."
+                            rows={2}
+                            className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+                            disabled={isAddingNote}
+                        />
+                        <div className="flex gap-2">
+                            <select
+                                value={newNoteSubjectId}
+                                onChange={(e) => setNewNoteSubjectId(e.target.value)}
+                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm cursor-pointer"
+                                disabled={isAddingNote}
+                            >
+                                <option value="">No Subject</option>
+                                {subjects.map((sub) => (
+                                    <option key={sub.id} value={sub.id}>
+                                        {sub.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                type="submit"
+                                disabled={isAddingNote}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-1.5 rounded transition-colors disabled:opacity-50 text-sm cursor-pointer"
+                            >
+                                {isAddingNote ? 'Adding...' : 'Add'}
+                            </button>
+                        </div>
+                    </form>
+
+                    {isNotesLoading ? (
+                        <p className="text-slate-500 text-sm italic text-center">Loading...</p>
+                    ) : notesError ? (
+                        <p className="text-red-400 text-sm bg-red-950/20 border border-red-900/30 px-3 py-2 rounded text-center">{notesError}</p>
+                    ) : notes.length === 0 ? (
+                        <p className="text-slate-500 text-sm italic text-center">No notes yet.</p>
+                    ) : (
+                        <ul className="flex flex-col gap-2">
+                            {notes.map((note) => {
+                                const subject = subjects.find(s => s.id === note.subject_id);
+                                return (
+                                    <li key={note.id} className="bg-slate-950 border border-slate-800/80 rounded px-3 py-2 text-sm flex justify-between items-center gap-3">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="font-medium text-slate-200">{note.title}</span>
+                                            {subject && (
+                                                <span className="text-xs text-indigo-400 font-semibold">{subject.name}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            {note.content && (
+                                                <span className="text-xs text-slate-400 truncate max-w-[120px]">
+                                                    {note.content}
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={() => handleDeleteNote(note.id)}
+                                                className="text-xs text-rose-450 hover:text-rose-400 font-medium px-2 py-1 rounded transition-colors cursor-pointer"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </div>
+
                 </div>
             </div>
         </main>

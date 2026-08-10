@@ -99,6 +99,51 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      notes: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          subject_id: string | null
+          title: string
+          content: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          subject_id?: string | null
+          title: string
+          content?: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          subject_id?: string | null
+          title?: string
+          content?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
