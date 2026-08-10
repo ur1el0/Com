@@ -51,6 +51,54 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      assignments: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          subject_id: string | null
+          title: string
+          description: string | null
+          due_date: string | null
+          status: 'pending' | 'in_progress' | 'completed'
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id: string
+          subject_id?: string | null
+          title: string
+          description?: string | null
+          due_date?: string | null
+          status?: 'pending' | 'in_progress' | 'completed'
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          subject_id?: string | null
+          title?: string
+          description?: string | null
+          due_date?: string | null
+          status?: 'pending' | 'in_progress' | 'completed'
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
