@@ -144,6 +144,44 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      events: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          title: string
+          description: string | null
+          event_date: string
+          color: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id: string
+          title: string
+          description?: string | null
+          event_date: string
+          color?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          event_date?: string
+          color?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
