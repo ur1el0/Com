@@ -8,7 +8,7 @@ import { useEvents } from '../hooks/useEvents.js';
 export function DashboardPage() {
     const { user, logout } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-    const { subjects, isLoading, error, addSubject, deleteSubject } = useSubjects();
+    const { subjects, isLoading, error, addSubject, updateSubject, deleteSubject } = useSubjects();
     const { assignments, isLoading: isAssignmentsLoading, error: assignmentsError, addAssignment, updateAssignment, deleteAssignment } = useAssignments();
     const { notes, isLoading: isNotesLoading, error: notesError, addNote, deleteNote } = useNotes()
     const [newAssignmentTitle, setNewAssignmentTitle] = useState<string>('');
@@ -31,6 +31,8 @@ export function DashboardPage() {
     const [newSubjectName, setNewSubjectName] = useState<string>('');
     const [isAdding, setIsAdding] = useState<boolean>(false);
 
+    const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null)
+    const [editSubjectName, setEditSubjectName] = useState<string>('')
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -66,6 +68,19 @@ export function DashboardPage() {
             console.error('Failed to delete subject:', err);
         }
     };
+
+    const handleSaveSubjectEdit = async (id: string) => {
+        if (!editSubjectName.trim()) {
+            setEditingSubjectId(null)
+            return
+        }
+        try {
+            await updateSubject(id, { name: editSubjectName })
+            setEditingSubjectId(null)
+        } catch (err) {
+            console.error('Failed to update subject', err)
+        }
+    }
 
     const handleAddAssignment = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -251,20 +266,51 @@ export function DashboardPage() {
                         ) : (
                             <ul className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
                                 {subjects.map((subject) => (
-                                    <li key={subject.id} className="bg-slate-950/80 border border-slate-850 rounded px-3 py-2 text-sm flex justify-between items-center">
-                                        <span className="font-medium text-slate-200 truncate pr-2">{subject.name}</span>
+                                    <li key={subject.id} className="bg-slate-950/80 border border-slate-850 rounded px-3 py-2 text-sm flex justify-between items-center gap-2">
+                                        {editingSubjectId === subject.id ? (
+                                            <input
+                                                type="text"
+                                                value={editSubjectName}
+                                                onChange={(e) => setEditSubjectName(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSaveSubjectEdit(subject.id);
+                                                    if (e.key === 'Escape') setEditingSubjectId(null);
+                                                }}
+                                                className="flex-1 bg-slate-900 border border-indigo-500/50 rounded px-2 py-1 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm"
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <span className="font-medium text-slate-200 truncate pr-2">{subject.name}</span>
+                                        )}
+
                                         <div className="flex items-center gap-2 shrink-0">
-                                            {subject.grade && (
+                                            {subject.grade && !editingSubjectId && (
                                                 <span className="text-xs bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded text-indigo-400 font-semibold">
                                                     {subject.grade}
                                                 </span>
                                             )}
-                                            <button
-                                                onClick={() => handleDeleteSubject(subject.id)}
-                                                className="text-xs text-rose-400 hover:text-rose-350 font-medium p-1 transition-colors cursor-pointer"
-                                            >
-                                                Delete
-                                            </button>
+                                            
+                                            {editingSubjectId === subject.id ? (
+                                                <button onClick={() => handleSaveSubjectEdit(subject.id)} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium p-1 cursor-pointer">Save</button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => { setEditingSubjectId(subject.id); setEditSubjectName(subject.name); }} 
+                                                    className="text-xs text-indigo-400 hover:text-indigo-300 font-medium p-1 cursor-pointer"
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
+
+                                            {editingSubjectId === subject.id ? (
+                                                <button onClick={() => setEditingSubjectId(null)} className="text-xs text-slate-400 hover:text-slate-300 font-medium p-1 cursor-pointer">Cancel</button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleDeleteSubject(subject.id)}
+                                                    className="text-xs text-rose-400 hover:text-rose-350 font-medium p-1 transition-colors cursor-pointer"
+                                                >
+                                                    Delete
+                                                </button>
+                                            )}
                                         </div>
                                     </li>
                                 ))}
