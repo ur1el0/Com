@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNotes } from '../../hooks/useNotes.js';
+import type { Subject } from '../../hooks/useSubjects.js';
 
 interface NotesPanelProps {
-    subjects: any[];
+    subjects: Subject[];
 }
 
 export function NotesPanel({ subjects }: NotesPanelProps) {
