@@ -3,9 +3,9 @@ import { supabase } from "../lib/supabase.js";
 import { useAuth } from "./useAuth.js";
 import type { Database } from "../database.types.js";
 
-type Assignment = Database['public']['Tables']['assignments']['Row']
+export type Assignment = Database['public']['Tables']['assignments']['Row']
 type InsertAssignment = Database['public']['Tables']['assignments']['Insert']
-type UpdateAssignment = Database['public']['Tables']['assignments']['Update']
+export type UpdateAssignment = Database['public']['Tables']['assignments']['Update']
 
 export function useAssignments() {
     const { user }  =useAuth()

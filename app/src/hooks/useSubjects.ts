@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase.js';
 import { useAuth } from './useAuth.js';
 import type { Database } from '../database.types.js';
 
-type Subject = Database['public']['Tables']['subjects']['Row'];
-type InsertSubject = Database['public']['Tables']['subjects']['Insert'];
-type UpdateSubject = Database['public']['Tables']['subjects']['Update'];
+export type Subject = Database['public']['Tables']['subjects']['Row'];
+export type InsertSubject = Database['public']['Tables']['subjects']['Insert'];
+export type UpdateSubject = Database['public']['Tables']['subjects']['Update'];
 
 export function useSubjects() {
     const { user } = useAuth();
