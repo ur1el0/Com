@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase.js";
 import { useAuth } from "./useAuth.js";
 import type { Database } from '../database.types.js'
 
-type CustomEvent = Database['public']['Tables']['events']['Row']
+export type CustomEvent = Database['public']['Tables']['events']['Row']
 type InsertCustomEvent = Database['public']['Tables']['events']['Insert'];
 type UpdateCustomEvent = Database['public']['Tables']['events']['Update'];
 
